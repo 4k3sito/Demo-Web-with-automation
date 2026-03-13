@@ -1,26 +1,43 @@
-name: Playwright Tests
+name: Playwright E2E Tests
+
+# Ejecuta el pipeline cuando hay cambios en la rama main
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
+
 jobs:
   test:
+    # Tiempo máximo de ejecución para evitar cobros excesivos si algo se congela
     timeout-minutes: 60
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - name: 📥 Descargar el código del repositorio
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Configurar Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: lts/*
-    - name: Install dependencies
+        node-version: 18
+        cache: 'npm' # Acelera futuras ejecuciones guardando en caché las dependencias
+
+    - name: 📦 Instalar dependencias
       run: npm ci
-    - name: Install Playwright Browsers
+
+    - name: 🌐 Instalar navegadores de Playwright
       run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: always()
+
+    - name: 🚀 Iniciar servidor local y ejecutar pruebas
+      # Levantamos un servidor en el puerto 8000 en segundo plano (&) para que Playwright lo consuma
+      run: |
+        npx http-server . -p 8000 & 
+        npx playwright test
+
+    - name: 📊 Subir reporte de Playwright
+      uses: actions/upload-artifact@v4
+      if: always() # Garantiza que el reporte se suba incluso si las pruebas fallan
       with:
         name: playwright-report
         path: playwright-report/
