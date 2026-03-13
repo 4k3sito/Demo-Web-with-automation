@@ -1,25 +1,24 @@
 import { test, expect } from '@playwright/test';
+import path from 'path';
 
-test('Debe revelar y hacer clic en elementos ocultos mediante Hover', async ({ page }) => {
-  await page.goto('https://practice.expandtesting.com/hovers');
+// Construimos la ruta absoluta al archivo index.html
+const localFilePath = `file://${path.resolve(__dirname, '../index.html')}`;
 
-  // Localizar la primera imagen de usuario
-  const userFigure = page.locator('.figure').first();
-  const caption = userFigure.locator('.figcaption');
-
-  // Antes del hover, el texto debería estar oculto o no visible para el usuario
-  await expect(caption).not.toBeVisible();
-
-  // Realizar el Hover
-  await userFigure.hover();
-
-  // Validar que ahora el nombre del usuario es visible
-  await expect(caption).toBeVisible();
-  await expect(caption).toContainText('name: user1');
-
-  // Hacer clic en el enlace que apareció
-  await caption.getByRole('link', { name: 'View profile' }).click();
+test.describe('Portal de Transportes Monterrey', () => {
   
-  // Verificar que la URL cambió correctamente
-  await expect(page).toHaveURL(/.*\/users\/1/);
+  test('La página carga correctamente y muestra el estado en línea', async ({ page }) => {
+    // 1. Navegar al archivo local
+    await page.goto(localFilePath);
+
+    // 2. Validar que el título de la pestaña sea el correcto
+    await expect(page).toHaveTitle(/Transportes Monterrey - Demo/);
+
+    // 3. Validar el texto del estado del sistema
+    const statusLocator = page.locator('#status');
+    await expect(statusLocator).toHaveText('En línea');
+
+    // 4. Validar que el color del estado sea verde (rgb(0, 128, 0))
+    await expect(statusLocator).toHaveCSS('color', 'rgb(0, 128, 0)');
+  });
+
 });
